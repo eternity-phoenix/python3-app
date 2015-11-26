@@ -101,3 +101,81 @@ RequestHandler是一个类，由于定义了__call__()方法，因此可以将�
 RequestHandler目的就是从URL函数中分析其需要接收的参数，从request中获取必要的参数，调用URL函数，
 然后把结果转换为web.Response对象，这样，就完全符合aiohttp框架的要求：
 '''
+#得到所有的没有默认值的命名关键字参数
+def get_required_kw_args(fn) :
+    args = []
+    params = inspect.signature(fn).parameters
+    for name, param in params.items() :
+        if param.kind == inspect.Parameter.KEYWORD_ONLY and param.default == inspect.Parameter.empty :
+            args.append(name)
+    return tuple(args)
+
+#得到所有命名关键字参数
+def get_named_kw_args(fn) :
+    args = []
+    params = inspect.signature(fn).parameters
+    for name, param in params.items() :
+        if param.kind == inspect.Parameter.KEYWORD_ONLY :
+            args.append(name)
+    return tuple(args)
+
+#命名关键字参数且默认为空
+def has_named_kw_args(fn) :
+    params = inspect.signature(fn).parameters
+    for name, param in params.items() :
+        if param.kind == inspect.Parameter.KEYWORD_ONLY and param.default == inspect.Parameter.empty :
+            return True
+    return False
+
+#有关键字参数?
+def has_var_kw_args(fn) :
+    params = inspect.signature(fn).parameters
+    for name, param in params.items() :
+        if param.kind == inspect.Parameter.VAR_KEYWORD :
+            return True
+    return False
+
+#有request参数?且接下来的参数必须是位子参数或关键字参数
+def has_request_args(fn) :
+    sig = inspect.signature(fn)
+    params = sig.parameters
+    found = False
+    for name, param in params.items() :
+        if name == 'request' :
+            found = True
+            continue
+        if found and (param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD) :
+            raise ValueError('request parameters must be the last named parameters in function: %s%s' % (fn.__name__, str(sig)))
+    return found
+
+class RequestHandler(object) :
+    def __init__(self, app, fn) :
+        self._app = app
+        self._func = fn
+        self._has_request_arg = has_request_args(fn)
+        self._has_var_kw_args = has_var_kw_args(fn)
+        self._has_named_kw_args = has_named_kw_args(fn)
+        self._named_kw_args = get_named_kw_args(fn)
+        self._required_kw_args = get_required_kw_args(fn)
+
+    def __str__(self) :
+        return str(self.__dict__)
+
+    @asyncio.coroutine
+    def __call__(self, request) :
+        kw = None
+        if self._has_var_kw_args or
+
+if __name__ == '__main__' :
+    def test(a, b, c = 0, *args, **kw) :
+        pass
+    def te(a, b, c = 0, *, d, e = 12, **kw) :
+        pass
+    def test1(a = 1, *args, **kw) :
+        pass
+    def test2(a, request, aa, **kw) :
+        pass
+    print(RequestHandler('111', test))
+    print(RequestHandler('111', te))
+    print(RequestHandler('111', test1))
+    #print(RequestHandler('111', test2))
