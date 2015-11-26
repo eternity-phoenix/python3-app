@@ -31,13 +31,13 @@ Web App里面有很多地方都要访问数据库。访问数据库需要创建�
 连接池由全局变量__pool存储，缺省情况下将编码设置为utf8，自动提交事务：
 '''
 import asyncio, logging, aiomysql
-logging.basicConfig(level = logging.INFO)
+logging.basicConfig(level = logging.DEBUG)
 
 def log(sql, args = ()) :
     logging.info('SQL: %s' % sql)
 
 @asyncio.coroutine
-def create_server(loop, **kw) :
+def create_pool(loop, **kw) :
     logging.info('create database connection pool...')
     global __pool
     __pool = yield from aiomysql.create_pool(
@@ -88,7 +88,7 @@ Insert, Update, Delete
 '''
 
 @asyncio.coroutine
-def excute(sql, args, autocommit = True) :
+def execute(sql, args, autocommit = True) :
     log(sql)
     with (yield from __pool) as conn :
         if autocommit :
@@ -141,6 +141,49 @@ users = User.findAll()
 注意到Model只是一个基类，如何将具体的子类如User的映射信息读取出来呢？
 答案就是通过metaclass：ModelMetaclass：
 '''
+
+'''
+Model从dict继承，所以具备所有dict的功能，
+同时又实现了特殊方法__getattr__()和__setattr__()，因此又可以像引用普通字段那样写：
+
+>>> user['id']
+123
+>>> user.id
+123
+以及Field和各种Field子类：
+'''
+class Field(object) :
+    def __init__(self, name, column_type, primary_key, default) :
+        self.name = name
+        self.column_type = column_type
+        self.primary_key = primary_key
+        self.default = default
+
+    def __str__(self) :
+        return '<%s, %s: %s>' % (self.__class__.__name__, self.column_type, self.name)
+#映射varchar的StringField：
+class StringField(Field) :
+    def __init__(self, name = None, primary_key = False, default = None, ddl = 'varchar(100)') :
+        super().__init__(name, ddl, primary_key, default)
+
+class BooleanField(Field) :
+    def __init__(self, name = None, default = False) :
+        super().__init__(name, 'boolean', False, default)
+
+class IntegerField(Field) :
+    def __init__(self, name = None, primary_key = False, default = 0) :
+        super().__init__(name, 'bigint', primary_key, default)
+
+class FloatField(Field) :
+    def __init__(self, name = None, primary_key = False, default = 0.0) :
+        super().__init__(name, 'real', primary_key, default)
+
+class TextField(Field) :
+    def __init__(self, name = None, default = None) :
+        super().__init__(name, 'text', False, default)
+
+
+
 def create_args_string(num) :
     return ', '.join(['?'] * num)
 
@@ -151,25 +194,25 @@ class ModelMetaclass(type) :
             return type.__new__(cls, name, bases, attrs)
         #获取table名称
         tableName = attrs.get('__table__', None) or name
-        logging.info('found model: %s (table: %s)' % (name, tableName))
+        logging.info(' found model: %s (table: %s)' % (name, tableName))
         #获取所有field和主键名
         mappings = dict()
         fields = []
         primaryKey = None
         for k, v in attrs.items() :
-            if isinstance(v, Filed) :
+            if isinstance(v, Field) :
                 logging.info(' found mapping: %s ==> %s' % (k, v))
                 mappings[k] = v
                 if v.primary_key :
                     #找到主键:
                     if primaryKey :
                         #多个主键:
-                        raise StandardError('Dumlicate primary key for field: %s' % k)
+                        raise RuntimeError('Dumlicate primary key for field: %s' % k)
                     primaryKey = k
                 else :
                     fields.append(k)
         if not primaryKey :
-            raise StandardError('Primary Key not found.')
+            raise RuntimeError('Primary Key not found.')
         for k in mappings.keys() :
             attrs.pop(k)
         escaped_fields = list(map(lambda x : '`%s`' % x, fields))
@@ -188,7 +231,8 @@ class ModelMetaclass(type) :
 class Model(dict, metaclass = ModelMetaclass) :
     def __init__(self, **kw) :
         if not kw.get(self.__primary_key__, None) :
-            raise StandardError('primary key must has value')
+            if not self.__mappings__[self.__primary_key__].default :
+                raise RuntimeError('primary key must has value')
         super(Model, self).__init__(**kw)
 
     def __getattr__(self, key) :
@@ -206,7 +250,7 @@ class Model(dict, metaclass = ModelMetaclass) :
     def getValueOrDefault(self, key) :
         value = getattr(self, key, None)
         if value is None :
-            field = self.__mapings__[key]
+            field = self.__mappings__[key]
             if field.default is not None :
                 value = field.default() if callable(field.default) else field.default
                 logging.debug('using default value for %s: %s' % (key, str(value)))
@@ -277,7 +321,7 @@ class Model(dict, metaclass = ModelMetaclass) :
 
     @asyncio.coroutine
     def save(self) :
-        args = list(map(self.getValueOrDefualt, self.__fields__))
+        args = list(map(self.getValueOrDefault, self.__fields__))
         args.append(self.getValueOrDefault(self.__primary_key__))
         rows = yield from execute(self.__insert__, args)
         if rows != 1 :
@@ -297,45 +341,7 @@ class Model(dict, metaclass = ModelMetaclass) :
         if rows != 1 :
             logging.warn('failed to remove by primary key: affected rows: %s' % rows)
 
-'''
-Model从dict继承，所以具备所有dict的功能，
-同时又实现了特殊方法__getattr__()和__setattr__()，因此又可以像引用普通字段那样写：
 
->>> user['id']
-123
->>> user.id
-123
-以及Field和各种Field子类：
-'''
-class Field(object) :
-    def __init__(self, name, column_type, primary_key, default) :
-        self.name = name
-        self.column_type = column_type
-        self.primary_key = primary_key
-        self.default = default
-
-    def __str__(self) :
-        return '<%s, %s: %s>' % (self.__class__.__name__, self.column_type, self.name)
-#映射varchar的StringField：
-class StringField(Field) :
-    def __init__(self, name = None, primary_key = False, default = None, ddl = 'varchar(100)') :
-        super().__init__(name, ddl, primary_key, default)
-
-class BooleanField(Field) :
-    def __init__(self, name = None, default = False) :
-        super().__init__(name, 'boolean', False, default)
-
-class IntegerField(Field) :
-    def __init__(self, name = None, primary_key = False, default = 0) :
-        super().__init__(name, 'bigint', primary_key, default)
-
-class FloatField(Field) :
-    def __init__(self, name = None, primary_key = False, default = 0.0) :
-        super().__init__(name, 'real', primary_key, default)
-
-class TextField(Field) :
-    def __init__(self, name = None, default = None) :
-        super().__init__(name, 'text', False, default)
 
 '''
 这样，任何继承自Model的类（比如User），会自动通过ModelMetaclass扫描映射关系，

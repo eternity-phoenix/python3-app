@@ -24,6 +24,7 @@ ip = socket.gethostbyname(socket.gethostname())
 
 @asyncio.coroutine
 def init(loop) :
+    yield from orm.create_pool(loop = loop, host = 'localhost', port = 3306, user = 'www-data', password = 'www-data', db = 'awesome')
     app = web.Application(loop = loop)
     app.router.add_route('GET', '/', index)
     srv = yield from loop.create_server(app.make_handler(), ip, 80)
