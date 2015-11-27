@@ -80,6 +80,7 @@ def init_jinja2(app, **kw) :
         for name, f in filters.items() :
             env.filters[name] = f
     app['__templating__'] = env
+    logging.info('init_jinja2 complete!')
 
 @asyncio.coroutine
 def logger_factory(app, handler) :
@@ -108,7 +109,7 @@ def data_factory(app, handler) :
 def response_factory(app, handler) :
     @asyncio.coroutine
     def response(request) :
-        logging.info('Response handler... (%s)...(%s)' % (andler, app))
+        logging.info('Response handler... (%s)...(%s)' % (handler, app))
         r = yield from handler(request)
         if isinstance(r, web.StreamResponse) :
             return r
@@ -133,6 +134,33 @@ def response_factory(app, handler) :
                 resp = web.Response(body = app['__templating__'].get_template(template).render(**r).encode('utf-8'))
                 resp.content_type = 'text/html;charset=utf-8'
                 return resp
+        if isinstance(r, int) and r >= 100 and t < 600 :
+            return web.Response(r)
+        if isinstance(r, tuple) and len(r) == 2 :
+            t, m = r
+            if isinstance(t, int) and t >= 100 and t < 600 :
+                return web.Response(t, str(m))
+        #default:
+        resp = web.Response(body = str(r).encode('utf-8'))
+        resp.content_type = 'text/plain;charset=utf-8'
+        return resp
+    return response
+
+def datetime_filter(t) :
+    delta = int(time.time() - t)
+    if delta < 60 :
+        return u'1分钟前'
+    if delta < 3600 :
+        return u'%s分钟前' % (delta // 60)
+    if delta < 3600 * 24 :
+        return u'%s小时前' % (delta // 3600)
+    if delta < 3600 * 24 * 7 :
+        return u'%s天前' % (delta // (3600 * 24))
+    if delta < 3600 * 24 * 30 :
+        return u'%s周前' % (delta // (3600 * 24 * 7))
+    dt = datetime.fromtimestamp(t)
+    return u'%s年%s月%s日' % (dt.year, dt.month, dt.day)
+
 def index(request) :
     return web.Response(body = b'<h1>Awesome</h1>', content_type = "text/html")
 
@@ -146,7 +174,13 @@ ip = socket.gethostbyname(socket.gethostname())
 @asyncio.coroutine
 def init(loop) :
     yield from orm.create_pool(loop = loop, host = 'localhost', port = 3306, user = 'www-data', password = 'www-data', db = 'awesome')
-    app = web.Application(loop = loop)
+    app = web.Application(loop = loop, middlewares = [
+        logger_factory, response_factory
+    ])
+    init_jinja2(app, filters = dict(datatime = datetime_filter))
+    add_routes(app, 'handlers')
+    add_static(app)
+    logging.info('init complete!')
     app.router.add_route('GET', '/', index)
     srv = yield from loop.create_server(app.make_handler(), ip, 80)
     logging.info('server started at http://%s:80...' % ip)
