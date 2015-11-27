@@ -18,7 +18,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from coroweb import add_routes, add_static
 import orm
-
+from config import configs
 
 '''
 middleware
@@ -109,7 +109,7 @@ def data_factory(app, handler) :
 def response_factory(app, handler) :
     @asyncio.coroutine
     def response(request) :
-        logging.info('Response handler... (%s)...(%s)' % (handler, app))
+        logging.info('Response handler... (%s)...(%s)') #% (handler.__name__, str(dir((app)))))
         r = yield from handler(request)
         if isinstance(r, web.StreamResponse) :
             return r
@@ -173,15 +173,17 @@ ip = socket.gethostbyname(socket.gethostname())
 '''
 @asyncio.coroutine
 def init(loop) :
-    yield from orm.create_pool(loop = loop, host = 'localhost', port = 3306, user = 'www-data', password = 'www-data', db = 'awesome')
+    yield from orm.create_pool(loop = loop, **configs.db)
     app = web.Application(loop = loop, middlewares = [
         logger_factory, response_factory
     ])
     init_jinja2(app, filters = dict(datatime = datetime_filter))
     add_routes(app, 'handlers')
     add_static(app)
+
     logging.info('init complete!')
     app.router.add_route('GET', '/', index)
+
     srv = yield from loop.create_server(app.make_handler(), ip, 80)
     logging.info('server started at http://%s:80...' % ip)
     return srv
