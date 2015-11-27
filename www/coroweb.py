@@ -241,7 +241,12 @@ def add_route(app, fn) :
     if not asyncio.iscoroutinefunction(fn) and not inspect.isgeneratorfunction(fn) :
         fn = asyncio.coroutine(fn)
     logging.info('add route %s %s => %s(%s)' % (method, path, fn.__name__, ', '.join(inspect.signature(fn).parameters.keys())))
-    app.router.add_route(method, path, RequestHandler(app, fn))
+    #支持@post(['/', '/index'])区分大小写,不支持中文
+    if isinstance(path, (list, tuple)) :
+        for path_ in path :
+            app.router.add_route(method, path_, RequestHandler(app, fn))
+    else :
+        app.router.add_route(method, path, RequestHandler(app, fn))
 
 def add_routes(app, module_name) :
     n = module_name.rfind('.')

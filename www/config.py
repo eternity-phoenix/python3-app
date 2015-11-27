@@ -56,4 +56,5 @@ except ImportError :
     pass
 
 configs = toDict(configs)
-#print(configs)
+if __name__ == '__main__' :
+    print(configs)

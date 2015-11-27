@@ -109,7 +109,7 @@ def data_factory(app, handler) :
 def response_factory(app, handler) :
     @asyncio.coroutine
     def response(request) :
-        logging.info('Response handler... (%s)...(%s)') #% (handler.__name__, str(dir((app)))))
+        logging.info('Response handler... (%s)...' % request.path) #% (handler.__name__, str(dir((app)))))
         r = yield from handler(request)
         if isinstance(r, web.StreamResponse) :
             return r
@@ -130,7 +130,11 @@ def response_factory(app, handler) :
                 resp.content_type = 'application/json;charset=utf-8'
                 return resp
             else :
-                r['__user__'] = request.__user__
+                try :
+                    r['__user__'] = request.__user__
+                except :
+                    print('**********\r\nwarning\r\n**********')
+                #print(dir(request))
                 resp = web.Response(body = app['__templating__'].get_template(template).render(**r).encode('utf-8'))
                 resp.content_type = 'text/html;charset=utf-8'
                 return resp
@@ -161,8 +165,6 @@ def datetime_filter(t) :
     dt = datetime.fromtimestamp(t)
     return u'%s年%s月%s日' % (dt.year, dt.month, dt.day)
 
-def index(request) :
-    return web.Response(body = b'<h1>Awesome</h1>', content_type = "text/html")
 
 ip = socket.gethostbyname(socket.gethostname())
 
@@ -182,7 +184,6 @@ def init(loop) :
     add_static(app)
 
     logging.info('init complete!')
-    app.router.add_route('GET', '/', index)
 
     srv = yield from loop.create_server(app.make_handler(), ip, 80)
     logging.info('server started at http://%s:80...' % ip)

@@ -68,7 +68,7 @@ def select(sql, args, size = None) :
         if size :
             rs = yield from cur.fechmany(size)
         else :
-            rs = yield from cur.fechall()
+            rs = yield from cur.fetchall()
         yield from cur.close()
         logging.info('rows returned: %s' % len(rs))
         return rs
