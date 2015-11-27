@@ -161,7 +161,7 @@ class RequestHandler(object) :
     def __str__(self) :
         return str(self.__dict__)
 
-    #@asyncio.coroutine
+    @asyncio.coroutine
     def __call__(self, request) :
         kw = None
         if self._has_var_kw_args or self._has_named_kw_args or self._has_request_arg :
@@ -226,7 +226,7 @@ add_route(app, handles.create_comment)
 # 自动把handler模块的所有符合条件的函数注册了:
 add_routes(app, 'handlers')
 add_routes()定义如下：
-后，在app.py中加入middleware、jinja2模板和自注册的支持：
+
 '''
 def add_static(app) :
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
