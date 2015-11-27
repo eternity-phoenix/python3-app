@@ -24,40 +24,22 @@ __author__ = 'Eternity_Phoenix'
 
 但是，这样的页面：
 
-simple-hello-world
 
 你拿得出手么？
 
 我们要写出用户真正看得上眼的页面，首页长得像这样：
 
-awesomepy-home-blogs
+
 
 评论区：
 
-awesomepy-comments
 
 还有极其强大的后台管理页面：
 
-awesomepy-manage-blogs
-
-是不是一下子变得高端大气上档次了？
-
-项目名称
-
-必须是高端大气上档次的名称，命名为awesome-python3-webapp。
 
 项目计划
 
 项目计划开发周期为16天。每天，你需要完成教程中的内容。如果你觉得编写代码难度实在太大，
 可以参考一下当天在GitHub上的代码。
 
-第N天的代码在https://github.com/michaelliao/awesome-python3-webapp/tree/day-N上。比如第1天就是：
-
-https://github.com/michaelliao/awesome-python3-webapp/tree/day-01
-
-以此类推。
-
-要预览awesome-python3-webapp的最终页面效果，请猛击：
-
-awesome.liaoxuefeng.com
 '''
