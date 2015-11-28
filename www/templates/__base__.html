@@ -1,4 +1,21 @@
 <!DOCTYPE html>
+<!--
+{/% macro pagination(url, page) %/}
+    <ul class="uk-pagination">
+        {/% if page.has_previous %/}
+            <li><a href="{/{ url }/}{/{ page.page_index - 1 }/}"<i class="uk-icon-double-left"></i></a></li>
+        {/% else %/}
+            <li class="uk-disabled"><span><i class="uk-icon-angle-double-left"></i></sapn></li>
+        {/% endif %/}
+            <li class="uk-active"><sapn>{/{ page.page_index }/}</sapn></li>
+        {/% if page.has_next %/}
+            <li><a href="{/{ url }/}{/{ page.page_index + 1 }/}"<i class="uk-icon-double-right"></i></a></li>
+        {/% else %/}
+            <li class="uk-disabled"><span><i class="uk-icon-angle-double-right"></i></sapn></li>
+        {/% endif %/}
+    </ul>
+</% endmacro %/}
+-->
 <html>
 <head>
     <meta charset = "utf-8" />
@@ -20,7 +37,25 @@
             <ul class="uk-navbar-nav">
                 <li data-url="blogs"><a href="/"><i class="uk-icon-home"></i>日志</a></li>
                 <li><a target="_blank" href="https://onedrive.live.com/redir?resid=1F9629B2C032D2FE!301&authkey=!AK6Va1EhygnP6uk&ithint=folder%2cpdf"><i class="uk-icon-book"></i>Book</a></li>
+                <li><a target="_blank" href="https://onedrive.live.com/redir?resid=1F9629B2C032D2FE!3353&authkey=!AGvgcptIofCoh5k&ithint=folder%2cc"><i class="uk-icon-code"></i>Codes</a></li>
             </ul>
+            <div class="uk-navbar-flip">
+                <ul class="uk-navbar-nav">
+                {% if __user__ %}
+                    <li class="uk-parent" data-uk-dropdown>
+                        <a href="#0"><i class="uk-icon-user"></i> {{ __user__.name }}</a>
+                        <div class="uk-dropdown uk-dropdown-navbar">
+                            <ul class="uk-nav uk-nav-navbar">
+                                <li><a href="/signout"><i class="uk-icon-sign-out"></i>登出</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                {% else %}
+                    <li><a href="/signin"><i class="uk-icon-sign-in"></i>登陆</a></li>
+                    <li><a href="/register"><i class="uk-icon-edit"></i>注册</a></li>
+                {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
     <div class="uk-container uk-container-center">
@@ -29,6 +64,19 @@
             {% block content %}
             {% endblock %}
             <!--content -->
+        </div>
+    </div>
+
+    <div class="uk-margin-large-top" style="background-color:#eee; border-top:1px solid #ccc;">
+        <div class="uk-container uk-container-center uk-text-center">
+            <div class="uk-panel uk-margin-top uk-margin-bottom">
+                <p>
+                    <a target="_blank" href="http://qzone.qq.com/?s_url=http://user.qzone.qq.com/769518953?t=0.7646826825965275" class="uk-icon-button uk-icon-qq"></a>
+                </p>
+                <p>Powered by <a href="/">Awesome Python Webapp</a>. Copyright &copy; 2015.12. [<a href="/manage/" target="_blank">Manage</a>]</p>
+                <p><a href="http://www.liaoxuefeng.com">技术引导教程</a>.All rights reserved.</p>
+                <a target="_blank" href="http://www.w3.org/TR/html5"><i class="uk-icon-html5" style="font-size:64px; color: #444;"></i></a>
+            </div>
         </div>
     </div>
 </body>
