@@ -95,6 +95,7 @@ def logger_factory(app, handler) :
 def data_factory(app, handler) :
     @asyncio.coroutine
     def parse_data(request) :
+        logging.info('parse_data in line 98')
         if request.method == 'POST' :
             if request.content_type.lower().startswith('application/json') :
                 request.__data__ = yield from request.json()
@@ -110,7 +111,9 @@ def response_factory(app, handler) :
     @asyncio.coroutine
     def response(request) :
         logging.info('Response handler... (%s)...' % request) #% (handler.__name__, str(dir((app)))))
+        #logging.info(dir(handler.__call__), type(handler.__call__))
         r = yield from handler(request)
+        #logging.info(type(r), r)
         if isinstance(r, web.StreamResponse) :
             return r
         if isinstance(r, bytes) :
@@ -176,7 +179,7 @@ ip = socket.gethostbyname(socket.gethostname())
 @asyncio.coroutine
 def init(loop) :
     yield from orm.create_pool(loop = loop, **configs.db)
-    app = web.Application(loop = loop, middlewares = [
+    app = web.Application(loop = loop, debug = True, middlewares = [
         logger_factory, response_factory
     ])
     init_jinja2(app, filters = dict(datetime = datetime_filter))

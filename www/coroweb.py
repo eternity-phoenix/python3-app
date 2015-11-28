@@ -163,6 +163,7 @@ class RequestHandler(object) :
 
     @asyncio.coroutine
     def __call__(self, request) :
+        logging.info('call beging...')
         kw = None
         if self._has_var_kw_args or self._has_named_kw_args or self._has_request_arg :
             if request.method == 'POST' :
@@ -185,6 +186,7 @@ class RequestHandler(object) :
                     kw = dict()
                     for k, v in parse.parse_qs(qs, True).items() :
                         kw[k] = v[0]
+        logging.info(str(kw) + 'line 189')
         if kw is None :
             kw = dict(**request.match_info)
         else :
@@ -209,6 +211,7 @@ class RequestHandler(object) :
                         return web.HTTPBadRequest('Missing argument: %s' % name)
             logging.info('call with args: %s' % str(kw))
             try :
+                logging.info(kw)
                 r = yield from self._func(**kw)
                 return r
             except APIError as e :
