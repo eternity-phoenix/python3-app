@@ -48,6 +48,13 @@ def test(request) :
         'users' : users
     }
 
+@get('/api/test/users')
+def api_get_users(request) :
+    users = yield from User.findAll(orderBy = 'created_at desc')
+    for u in users :
+        u.passwd = '********'
+    return dict(users = users)
+
 if __name__ == "__main__" :
     r = index(1)
     import json
