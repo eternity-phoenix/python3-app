@@ -202,21 +202,22 @@ class RequestHandler(object) :
                 if k in kw :
                     logging.warning('Duplicate arg name in named arg and kw args: %s' % k)
                 kw[k] = v
+        logging.info(str(kw) + 'line 205 coro')
         if self._has_request_arg :
             kw['request'] = request
-            #check required kw:
-            if self._required_kw_args :
-                for name in self._required_kw_args :
-                    if not name in kw :
-                        return web.HTTPBadRequest('Missing argument: %s' % name)
-            logging.info('call with args: %s' % str(kw))
-            try :
-                logging.info(kw)
-                r = yield from self._func(**kw)
-                return r
-            except APIError as e :
-                logging.warning('found a error! at line 215 of coroweb')
-                return dict(error = e.error, data = e.data, message = e.message)
+        #check required kw:
+        if self._required_kw_args :
+            for name in self._required_kw_args :
+                if not name in kw :
+                    return web.HTTPBadRequest('Missing argument: %s' % name)
+        logging.info('call with args: %s' % str(kw))
+        try :
+            logging.info(kw)
+            r = yield from self._func(**kw)
+            return r
+        except APIError as e :
+            logging.warning('found a error! at line 219 of coroweb')
+            return dict(error = e.error, data = e.data, message = e.message)
 '''
 再编写一个add_route函数，用来注册一个URL处理函数：
 最后一步，把很多次add_route()注册的调用：
