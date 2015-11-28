@@ -31,12 +31,12 @@ def index(request) :
     summary = r'''the quick brown fox jumps over a lazy dog.
     i'm live for study and codes...'''
     blogs = [
-        Blog(id = 1, name = 'Test Blog1', summary = summary, created_at = time.time() - 220)
-        Blog(id = 2, name = 'Eternity_Phoenix', summary = summary, created_at = time.time() - 1220)
+        Blog(id = 1, name = 'Test Blog1', summary = summary, created_at = time.time() - 220),
+        Blog(id = 2, name = 'Eternity_Phoenix', summary = summary, created_at = time.time() - 1220),
         Blog(id = 3, name = 'lone', summary = summary, created_at = time.time() - 2220)
     ]
     return {
-        '__template__' : 'blogs.html'
+        '__template__' : 'blogs.html',
         'blogs' : blogs
     }
 
@@ -47,3 +47,9 @@ def test(request) :
         '__template__' : 'test.html',
         'users' : users
     }
+
+if __name__ == "__main__" :
+    r = index(1)
+    import json
+    rr = json.dumps(r, ensure_ascii = False, default = lambda o : o.__dict__)
+    print(rr)

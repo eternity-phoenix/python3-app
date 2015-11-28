@@ -179,7 +179,7 @@ def init(loop) :
     app = web.Application(loop = loop, middlewares = [
         logger_factory, response_factory
     ])
-    init_jinja2(app, filters = dict(datatime = datetime_filter))
+    init_jinja2(app, filters = dict(datetime = datetime_filter))
     add_routes(app, 'handlers')
     add_static(app)
 
