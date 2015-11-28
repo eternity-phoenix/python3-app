@@ -59,6 +59,14 @@ def api_get_users(request) :
         u.passwd = '********'
     return dict(users = users)
 
+@get('/register')
+def register(request) :
+    return {
+        '__template__' : "register.html"
+    }
+
+
+
 @post('/api/test/users')
 def api_post_users(request) :
     logging.info('URL return in 56 %s' % request)
