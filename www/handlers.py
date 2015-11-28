@@ -49,7 +49,7 @@ def test(request) :
     }
 
 @get('/api/test/users')
-def api_get_users(request) :
+def api_get_users(*args) :
     users = yield from User.findAll(orderBy = 'created_at desc')
     for u in users :
         u.passwd = '********'

@@ -109,7 +109,7 @@ def data_factory(app, handler) :
 def response_factory(app, handler) :
     @asyncio.coroutine
     def response(request) :
-        logging.info('Response handler... (%s)...' % request.path) #% (handler.__name__, str(dir((app)))))
+        logging.info('Response handler... (%s)...' % request) #% (handler.__name__, str(dir((app)))))
         r = yield from handler(request)
         if isinstance(r, web.StreamResponse) :
             return r
