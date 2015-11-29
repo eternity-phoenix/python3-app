@@ -7,9 +7,9 @@
         {% else %}
             <li class="uk-disabled"><span><i class="uk-icon-angle-double-left"></i></sapn></li>
         {% endif %}
-            <li class="uk-active"><sapn>{{ page.page_index }}</sapn></li>
+            <li class="uk-active"><span>{{ page.page_index }}</span></li>
         {% if page.has_next %}
-            <li><a href="{{ url }}{{ page.page_index + 1 }}"<i class="uk-icon-double-right"></i></a></li>
+            <li><a href="{{ url }}{{ page.page_index + 1 }}"<i class="uk-icon-angle-double-right"></i></a></li>
         {% else %}
             <li class="uk-disabled"><span><i class="uk-icon-angle-double-right"></i></sapn></li>
         {% endif %}
@@ -28,8 +28,8 @@
     <script src = "/static/js/sha1.min.js"></script>
     <script src = "/static/js/uikit.min.js"></script>
     <script src = "/static/js/components/sticky.min.js"></script>
-    <script src = "/static/js/awesome.js"></script>
     <script src = "/static/js/vue.min.js"></script>
+    <script src = "/static/js/awesome.js"></script>
     {% block beforehead %}<!-- before head -->{% endblock %}
 </head>
 <body>

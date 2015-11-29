@@ -369,7 +369,7 @@ function postJSON(url, data, callback) {
 
 // extends Vue:
 
-if (typeof(Vue)!=='undefined') {
+if (Vue!=='undefined') {
     Vue.filter('datetime', function (value) {
         var d = value;
         if (typeof(value)==='number') {
