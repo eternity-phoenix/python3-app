@@ -66,7 +66,7 @@ def select(sql, args, size = None) :
         cur = yield from conn.cursor(aiomysql.DictCursor)
         yield from cur.execute(sql.replace('?', '%s'), args or ())
         if size :
-            rs = yield from cur.fechmany(size)
+            rs = yield from cur.fetchmany(size)
         else :
             rs = yield from cur.fetchall()
         yield from cur.close()
