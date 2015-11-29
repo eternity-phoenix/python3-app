@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <!--
-{/% macro pagination(url, page) %/}
+{% macro pagination(url, page) %}
     <ul class="uk-pagination">
-        {/% if page.has_previous %/}
-            <li><a href="{/{ url }/}{/{ page.page_index - 1 }/}"<i class="uk-icon-double-left"></i></a></li>
-        {/% else %/}
+        {% if page.has_previous %}
+            <li><a href="{{ url }}{{ page.page_index - 1 }}"<i class="uk-icon-double-left"></i></a></li>
+        {% else %}
             <li class="uk-disabled"><span><i class="uk-icon-angle-double-left"></i></sapn></li>
-        {/% endif %/}
-            <li class="uk-active"><sapn>{/{ page.page_index }/}</sapn></li>
-        {/% if page.has_next %/}
-            <li><a href="{/{ url }/}{/{ page.page_index + 1 }/}"<i class="uk-icon-double-right"></i></a></li>
-        {/% else %/}
+        {% endif %}
+            <li class="uk-active"><sapn>{{ page.page_index }}</sapn></li>
+        {% if page.has_next %}
+            <li><a href="{{ url }}{{ page.page_index + 1 }}"<i class="uk-icon-double-right"></i></a></li>
+        {% else %}
             <li class="uk-disabled"><span><i class="uk-icon-angle-double-right"></i></sapn></li>
-        {/% endif %/}
+        {% endif %}
     </ul>
-</% endmacro %/}
+{% endmacro %}
 -->
 <html>
 <head>

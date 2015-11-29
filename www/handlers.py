@@ -88,18 +88,19 @@ def cookie2user(cookie_str) :
         return None
 
 @get(['/', '/index', '/home'])
-def index(request) :
+def index(*, page = 1) :
     #return web.Response(body = b'<h1>Awesome</h1>', content_type = "text/html")
-    summary = r'''the quick brown fox jumps over a lazy dog.
-    i'm live for study and codes...'''
-    blogs = [
-        Blog(id = 1, name = 'Test Blog1', summary = summary, created_at = time.time() - 220),
-        Blog(id = 2, name = 'Eternity_Phoenix', summary = summary, created_at = time.time() - 1220),
-        Blog(id = 3, name = 'lone', summary = summary, created_at = time.time() - 2220)
-    ]
+    page_index = get_page_index(page)
+    num = yield from Blog.findNumber('count(id)')
+    page = Page(num)
+    if num == 0 :
+        blogs = []
+    else :
+        blogs = yield from Blog.findAll(orderBy = 'created_at desc', limit = (page.offset, page.limit))
     return {
         '__template__' : 'blogs.html',
-        'blogs' : blogs
+        'blogs' : blogs,
+        'page' : page
     }
 
 @get('/test')
