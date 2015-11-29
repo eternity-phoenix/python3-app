@@ -23,9 +23,33 @@ $(function () {
         methods: {
             submit: function (event) {
                 event.preventDefault();
+                var $form = $('#form-register');
                 if (! this.name.trim()) {
                     return showError('请输入名字');
                 }
+                if (! validateEmail(this.email.trim().toLowerCase())) {
+                    return showError('请输入正确的邮箱地址');
+                }
+                if (this.password1.length < 6) {
+                    return showError('密码长度至少为6位!')
+                }
+                if (this.password2 !== this.password1) {
+                    return showError('两次输入的密码不一致!')
+                }
+                startLoading();
+                postApi('/api/users', {
+                    name : this.name,
+                    email : this.email.trim().toLowerCase(),
+                    password : CryptoJS.SHA1(this.password1).toString()
+                }, function (err, r) {
+                    if (err) {
+                        showError(err);
+                    }
+                    else {
+                        return location.assign('/');
+                    }
+                    stopLoading();
+                });
             }
         }
     });

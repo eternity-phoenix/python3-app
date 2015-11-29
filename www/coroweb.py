@@ -168,18 +168,18 @@ class RequestHandler(object) :
         if self._has_var_kw_args or self._has_named_kw_args or self._has_request_arg :
             if request.method == 'POST' :
                 if not request.content_type :
-                    return web.HTTPBadRequest('Missing body Content-Type.')
+                    return web.HTTPBadRequest(body = b'Missing body Content-Type.')
                 ct = request.content_type.lower()
                 if ct.startswith('application/json') :
                     params = yield from request.json()
                     if not isinstance(params, dict) :
-                        return web.HTTPBadRequest('JSON body must be object')
+                        return web.HTTPBadRequest(body = b'JSON body must be object')
                     kw = params
                 elif ct.startswith('application/x-www-form-urlencoded') or ct.startswith('multipart/form-data') :
                     params = yield from request.post()
                     kw = dict(**params)
                 else :
-                    return web.HTTPBadRequest('Unsupported Content-Type: %s' % request.content_type)
+                    return web.HTTPBadRequest(body = ('Unsupported Content-Type: %s' % request.content_type).encode('utf-8'))
             if request.method == 'GET' :
                 qs = request.query_string
                 if qs :
@@ -197,6 +197,7 @@ class RequestHandler(object) :
                     if name in kw :
                         copy[name] = kw[name]
                 kw = copy
+            logging.info(str(kw) + 'line 200')
             #check named arg:
             for k, v in request.match_info.items() :
                 if k in kw :
@@ -209,7 +210,7 @@ class RequestHandler(object) :
         if self._required_kw_args :
             for name in self._required_kw_args :
                 if not name in kw :
-                    return web.HTTPBadRequest('Missing argument: %s' % name)
+                    return web.HTTPBadRequest(body = ('Missing argument: %s' % name).encode('utf-8'))
         logging.info('call with args: %s' % str(kw))
         try :
             logging.info(kw)
