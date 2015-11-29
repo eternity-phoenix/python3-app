@@ -130,8 +130,16 @@ def signin(request) :
         '__template__' : 'signin.html'
     }
 
+@get('/signout')
+def signout(request) :
+    referer = request.headers.get('Referer')
+    r = web.HTTPFound(referer or '/')
+    r.set_cookie(COOKIE_NAME, '-deleted-', max_age = 0, httponly = True)
+    logging.info('user signed out')
+    return r
+
 @post('/api/authenticate')
-def authenticate(*, email, passwd) :
+def authenticate(*, email, passwd, remember) :
     '''
     LOGIN IN
     '''
@@ -152,7 +160,9 @@ def authenticate(*, email, passwd) :
         raise APIValueError('password', 'Invalid password')
     #authenticate ok, set cookie
     r = web.Response()
-    r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age = 86400, httponly = True)
+    logging.info(remember)
+    max_age = 86400 if remember == 'false' else 3600
+    r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age = max_age, httponly = True)
     user.passwd = '********'
     r.content_type = 'application/json'
     r.body = json.dumps(user, ensure_ascii = False).encode('utf-8')

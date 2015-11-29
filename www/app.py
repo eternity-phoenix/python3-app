@@ -92,7 +92,7 @@ def logger_factory(app, handler) :
     return logger
 
 @asyncio.coroutine
-def auth_factory1(app, handler) :
+def auth_factory(app, handler) :
     @asyncio.coroutine
     def auth(request) :
         logging.info('check user : %s %s' % (request.method, request.path))
@@ -197,7 +197,7 @@ ip = socket.gethostbyname(socket.gethostname())
 def init(loop) :
     yield from orm.create_pool(loop = loop, **configs.db)
     app = web.Application(loop = loop, debug = True, middlewares = [
-        logger_factory, response_factory, auth_factory1
+        logger_factory, response_factory, auth_factory
     ])
     init_jinja2(app, filters = dict(datetime = datetime_filter))
     add_routes(app, 'handlers')
