@@ -1,0 +1,62 @@
+{% extends '__base__.html' %}
+
+{% block title %}日志管理{% endblock %}
+
+{% block beforehead %}
+
+<script>
+//var vm;
+
+function initVM(data) {
+    var vm = new Vue({
+        el : '#blog-manage',
+        data : {
+            blogs : data.blogs,
+            page = data.page
+        },
+        methods : {
+            edit_blog : function (blog) {
+                location.assign('/manage/blogs/edit?id=' + blog.id);
+            },
+            delete_blog : function (blog) {
+                if (confirm('确认要删除"' + blog.name + '"?删除后不可恢复!')) {
+                    postJSON('/api/blogs/' + blog.id + '/delete', function (error, r) {
+                        if (err) {
+                            return alert(err.message || err.error || err);
+                        }
+                    });
+                }
+            }
+        }
+    });
+    $('#blog-manage').show();
+}
+
+$(function() {
+    getJSON('/api/blogs', {
+        page : {{ page_index }}
+    }, function (err, results) {
+        if (err) {
+            return fatal(err);
+        }
+        $('#loading').hide();
+        initVM(results);
+    });
+});
+
+</script>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="uk-width-1-1 uk-margin-bottom">
+        <div class="uk-panel uk-panel-box">
+            <ul class="uk-breadcrub">
+                <li><a href="/manage/comments">评论</a></li>
+                <li class="uk-active"><span>日志</span><li>
+                    <li><a href="/manage/users">用户</a></li>
+            </ul>
+        </div>
+    </div>
+{% endblock %}

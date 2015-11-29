@@ -150,7 +150,7 @@ def authenticate(*, email, passwd, remember) :
     users = yield from User.findAll('email=?', [email])
     if len(users) == 0 :
         raise APIValueError('email', 'Email not exist.')
-    user = user[0]
+    user = users[0]
     #check passwd
     sha1 = hashlib.sha1()
     sha1.update(user.id.encode('utf-8'))
@@ -198,6 +198,49 @@ def api_register_user(*, email, name, password) :
     r.content_type = 'application/json'
     r.body = json.dumps(user, ensure_ascii = False).encode('utf-8')
     return r
+
+@get('/manage/blogs/create')
+def manage_create_blog(request) :
+    return {
+        '__template__' : 'manage_blog_edit.html',
+        'id' : '',
+        'action' : '/api/blogs'
+    }
+
+
+@get('/api/blogs')
+def api_blogs(*, page = 1) :
+    '''
+    模板页面首先通过API：GET /api/blogs?page=?拿到Model：
+    '''
+    page_index = get_page_index(page)
+    num = yield from Blog.findNumber('count(id)')
+    p = Page(num, page_index)
+    if num == 0 :
+        return dict(page = p, blogs = ())
+    blogs = yield from Blog.findAll(orderBy = 'created_at desc', limit = (p.offset, p.limit))
+    return dict(page = p, blogs = blogs)
+
+@get('/manage/blogs')
+def manage_blogs(*, page = 1) :
+    return {
+        '__template__' : 'manage_blogs.html',
+        'page_index' : get_page_index(page)
+    }
+
+@post('/api/blogs')
+def api_create_blog(request, *, name, summary, content) :
+    check_admin(request)
+    logging.info('create blog')
+    if not name.strip() :
+        raise APIValueError('name', 'name cannot be empty.')
+    if not summary.strip() :
+        raise APIValueError('summary', 'summary cannot be empty.')
+    if not content.strip() :
+        raise APIValueError('strip', 'strip cannot be empty.')
+    blog = Blog(user_id = request.__user__.id, user_name = request.__user__.name, user_image = request.__user__.image, name = name.strip(), summary = summary, content = content.strip())
+    yield from blog.save()
+    return blog
 
 if __name__ == "__main__" :
     r = index(1)
