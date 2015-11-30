@@ -69,6 +69,7 @@ def select(sql, args, size = None) :
             rs = yield from cur.fetchmany(size)
         else :
             rs = yield from cur.fetchall()
+        #logging.info((yield from cur.fetchall()))
         yield from cur.close()
         logging.info('rows returned: %s' % len(rs))
         return rs
@@ -305,8 +306,9 @@ class Model(dict, metaclass = ModelMetaclass) :
             sql.append('where')
             sql.append(where)
         rs = yield from select(' '.join(sql), args, 1)
+        logging.info(',,,,,, %s,,,,,0' % rs )
         if len(rs) == 0 :
-            return None
+            return 0
         return rs[0]['_num_']
 
     @classmethod

@@ -182,11 +182,12 @@ class RequestHandler(object) :
                     return web.HTTPBadRequest(body = ('Unsupported Content-Type: %s' % request.content_type).encode('utf-8'))
             if request.method == 'GET' :
                 qs = request.query_string
+                logging.info('qs : ' + qs)
                 if qs :
                     kw = dict()
                     for k, v in parse.parse_qs(qs, True).items() :
                         kw[k] = v[0]
-        logging.info(str(kw) + 'line 189')
+        logging.info(str(kw) + 'line 189' + request.method + request.query_string)
         if kw is None :
             kw = dict(**request.match_info)
         else :
@@ -284,6 +285,10 @@ if __name__ == '__main__' :
     print(RequestHandler('111', te))
     print(RequestHandler('111', test1))
     #print(RequestHandler('111', test2))
+    print()
+    def test11(*, p = 1) :
+        pass
+    print(RequestHandler('111', test11))
     '''print()
     from urllib.request import Request
     z = Request(url = 'http://www.baidu.com', method = 'GET')
