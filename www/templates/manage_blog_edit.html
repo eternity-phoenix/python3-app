@@ -17,6 +17,7 @@ function initVM(blog) {
             submit: function (event) {
                 event.preventDefault();
                 var $form = $('#blog-edit').find('form');
+                vm.$data.created_at = new Date().getTime();
                 $form.postJSON(action, vm.$data, function (err, r) {
                     if (err) {
                         $form.showFormError(err);

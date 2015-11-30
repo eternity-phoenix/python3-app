@@ -107,7 +107,7 @@ def index(request, *, page = 1) :
 @get('/blog/{id}')
 def get_blog(id) :
     blog = yield from Blog.find(id)
-    comments = yield from Comment.findAll('id=?', [id], orderBy = 'created_at desc')
+    comments = yield from Comment.findAll('blog_id=?', [id], orderBy = 'created_at desc')
     for c in comments :
         c.html_content = text2html(c.content)
     blog.html_content = markdown2.markdown(blog.content)
@@ -206,7 +206,7 @@ def api_post_users(request) :
 
 @post('/api/users')
 def api_register_user(*, email, name, password) :
-    if not name or not name.strip() :
+    if not str(name).strip() :
         raise APIValueError('name')
     if not email or not _RE_EMAIL.match(email) :
         raise APIValueError('email')
@@ -217,7 +217,7 @@ def api_register_user(*, email, name, password) :
         raise APIError('register:failed', 'email', 'Email is already in use.')
     uid = next_id()
     sha1_passwd = '%s:%s' % (uid, password)
-    user = User(id = uid, name = name.strip(), email = email, passwd = hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest(), image = 'http://www.gravatar.com/avatar/%s?d-mm&s=120' % hashlib.md5(email.encode('utf-8')).hexdigest())
+    user = User(id = uid, name = str(name).strip(), email = email, passwd = hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest(), image = 'http://www.gravatar.com/avatar/%s?d-mm&s=120' % hashlib.md5(email.encode('utf-8')).hexdigest())
     yield from user.save()
     #make session cookie:
     r = web.Response()
@@ -297,12 +297,12 @@ def api_create_comments(id, request, *, content) :
     user = request.__user__
     if user is None :
         raise APIPermissionError('Please signin first.')
-    if not content.strip() :
+    if not str(content).strip() :
         raise APIValueError('content')
     blog = yield from Blog.find(id)
     if blog is None :
         raise APIResourceNotFoundError('Blog')
-    comment = Comment(blog_id = id, user_id = user.id, user_name = user.name, user_image = user.image, content = content.strip())
+    comment = Comment(blog_id = id, user_id = user.id, user_name = user.name, user_image = user.image, content = str(content).strip())
     yield from comment.save()
     return comment
 
@@ -320,13 +320,13 @@ def manage_blogs(*, page = 1) :
 def api_create_blog(request, *, name, summary, content) :
     check_admin(request)
     logging.info('create blog')
-    if not name.strip() :
+    if not str(name).strip() :
         raise APIValueError('name', 'name cannot be empty.')
-    if not summary.strip() :
+    if not str(summary).strip() :
         raise APIValueError('summary', 'summary cannot be empty.')
-    if not content.strip() :
+    if not str(content).strip() :
         raise APIValueError('strip', 'strip cannot be empty.')
-    blog = Blog(user_id = request.__user__.id, user_name = request.__user__.name, user_image = request.__user__.image, name = name.strip(), summary = summary, content = content.strip())
+    blog = Blog(user_id = request.__user__.id, user_name = request.__user__.name, user_image = request.__user__.image, name = str(name).strip(), summary = summary, content = str(content).strip())
     yield from blog.save()
     return blog
 
@@ -336,18 +336,22 @@ def api_get_blog(request, *, id) :
     return blog
 
 @post('/api/blogs/{id}')
-def api_update_blog(id, request, *, name, summary, content) :
+def api_update_blog(id, request, *, name, summary, content, created_at) :
     check_admin(request)
     blog = yield from Blog.find(id)
-    if not name.strip() :
+    if not str(name).strip() :
         raise APIValueError('name', 'name cannot be empty.')
-    if not summary.strip():
+    if not str(summary).strip():
         raise APIValueError('summary', 'summary cannot be empty.')
-    if not content.strip():
+    if not str(content).strip():
         raise APIValueError('content', 'content cannot be empty.')
-    blog.name = name.strip()
-    blog.summary = summary.strip()
-    blog.content = content.strip()
+    blog.name = str(name).strip()
+    blog.summary = str(summary).strip()
+    blog.content = str(content).strip()
+    try :
+        blog.created_at = float(created_at)
+    except :
+        blog.created_at = created_at
     yield from blog.update()
     return blog
 

@@ -96,6 +96,7 @@ def execute(sql, args, autocommit = True) :
             yield from conn.begin()
         try :
             cur = yield from conn.cursor()
+            logging.info(str(sql) +'.........' + str(args))
             yield from cur.execute(sql.replace('?', '%s'), args)
             affected = cur.rowcount
             yield from cur.close()
@@ -332,6 +333,7 @@ class Model(dict, metaclass = ModelMetaclass) :
     @asyncio.coroutine
     def update(self) :
         args = list(map(self.getValue, self.__fields__))
+        args.append(self.getValue(self.__primary_key__))
         rows = yield from execute(self.__update__, args)
         if rows != 1 :
             logging.warn('failed to insert record: affected rows: %s' % rows)
