@@ -348,10 +348,7 @@ def api_update_blog(id, request, *, name, summary, content, created_at) :
     blog.name = str(name).strip()
     blog.summary = str(summary).strip()
     blog.content = str(content).strip()
-    try :
-        blog.created_at = float(created_at)
-    except :
-        blog.created_at = created_at
+    blog.created_at = float(created_at)
     yield from blog.update()
     return blog
 

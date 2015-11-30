@@ -105,6 +105,7 @@ def auth_factory(app, handler) :
                 request.__user__ = user
         if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin) :
             return web.HTTPFound('/signin')
+        logging.info('authenticate finished!')
         return (yield from handler(request))
     return auth
 
