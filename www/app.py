@@ -112,6 +112,9 @@ def auth_factory(app, handler) :
 def data_factory(app, handler) :
     @asyncio.coroutine
     def parse_data(request) :
+        '''
+        移动APP预留接口
+        '''
         logging.info('parse_data in line 98')
         if request.method == 'POST' :
             if request.content_type.lower().startswith('application/json') :
