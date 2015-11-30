@@ -138,10 +138,28 @@ if (! Number.prototype.toDateTime) {
     };
 }
 
+function parseQueryString() {
+    var
+        q = location.search,
+        r = {},
+        i, pos, s, qs;
+    if (q && q.charAt(0)==='?') {
+        qs = q.substring(1).split('&');
+        for (i=0; i<qs.length; i++) {
+            s = qs[i];
+            pos = s.indexOf('=');
+            if (pos <= 0) {
+                continue;
+            }
+            r[s.substring(0, pos)] = decodeURIComponent(s.substring(pos+1)).replace(/\+/g, ' ');
+        }
+    }
+    return r;
+}
+
 function gotoPage(i) {
     var r = parseQueryString();
     r.page = i;
-    alert('???');
     location.assign('?' + $.param(r));
 }
 
@@ -384,7 +402,7 @@ if (Vue!=='undefined') {
                 '<li v-if="has_previous"><a v-attr="onclick:\'gotoPage(\' + (page_index-1) + \')\'" href="#0"><i class="uk-icon-angle-double-left"></i></a></li>' +
                 '<li class="uk-active"><span v-text="page_index"></span></li>' +
                 '<li v-if="! has_next" class="uk-disabled"><span><i class="uk-icon-angle-double-right"></i></span></li>' +
-                '<li v-if="has_next"><a onclick="href: 'alert(1)'" ><i class="uk-icon-angle-double-right"></i></a></li>' +
+                '<li v-if="has_next"><a v-attr="onclick:\'gotoPage(\' + (page_index+1) + \')\'" href="#0"><i class="uk-icon-angle-double-right"></i></a></li>' +
             '</ul>'
     });
 }

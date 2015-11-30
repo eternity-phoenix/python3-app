@@ -217,7 +217,7 @@ def api_register_user(*, email, name, password) :
         raise APIError('register:failed', 'email', 'Email is already in use.')
     uid = next_id()
     sha1_passwd = '%s:%s' % (uid, password)
-    user = User(id = uid, name = str(name).strip(), email = email, passwd = hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest(), image = 'http://www.gravatar.com/avatar/%s?d-mm&s=120' % hashlib.md5(email.encode('utf-8')).hexdigest())
+    user = User(id = uid, name = str(name).strip(), email = email, passwd = hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest(), image = '/static/img/user.png')
     yield from user.save()
     #make session cookie:
     r = web.Response()
@@ -283,7 +283,7 @@ def api_comments(request, *, page = 1) :
     return dict(page = p, comments = comments)
 
 @get('/api/blogs')
-def api_blogs(*, page = 1) :
+def api_blogs(request, *, page = 1) :
     page_index = get_page_index(page)
     num = yield from Blog.findNumber('count(id)')
     p = Page(num, page_index)
@@ -307,7 +307,7 @@ def api_create_comments(id, request, *, content) :
     return comment
 
 @get('/manage/blogs')
-def manage_blogs(*, page = 1) :
+def manage_blogs(request, *, page = 1) :
     '''
     模板页面首先通过API：GET /api/blogs?page=?拿到Model：
     '''
