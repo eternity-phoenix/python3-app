@@ -8,6 +8,10 @@ __author__ = 'Eternity_Phoenix'
 '''
 由于我们的Web App建立在asyncio的基础上，因此用aiohttp写一个基本的app.py：
 '''
+
+import sys
+sys.path.append('/home/eternity-phoenix/.local/lib/python3.5/site-packages')
+
 import logging; logging.basicConfig(level = logging.INFO)
 
 import asyncio, os, json, time, socket
@@ -209,8 +213,9 @@ def init(loop) :
     add_static(app)
 
     logging.info('init complete!')
-
-    srv = yield from loop.create_server(app.make_handler(), ip, 80)
+    
+    print(ip)
+    srv = yield from loop.create_server(app.make_handler(), '127.0.0.1', 9000)
     logging.info('server started at http://%s:80...' % ip)
     return srv
 
