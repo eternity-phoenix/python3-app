@@ -11,6 +11,7 @@ __author__ = 'Eternity_Phoenix'
 
 import sys
 sys.path.append('/home/eternity-phoenix/.local/lib/python3.5/site-packages')
+#由于server的模块安装位置不当,请无视
 
 import logging; logging.basicConfig(level = logging.INFO)
 
@@ -213,9 +214,16 @@ def init(loop) :
     add_static(app)
 
     logging.info('init complete!')
-    
-    print(ip)
-    srv = yield from loop.create_server(app.make_handler(), '127.0.0.1', 9000)
+
+    #print(ip)
+    r = input('run at local(1) or temp test at web(2)?')
+    if r == '1' :
+        _ip = '127.0.0.1'
+        port = 9000
+    else :
+        port = 80
+        _ip = ip
+    srv = yield from loop.create_server(app.make_handler(), _ip, port)
     logging.info('server started at http://%s:80...' % ip)
     return srv
 
