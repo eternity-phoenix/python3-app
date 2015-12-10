@@ -93,7 +93,9 @@ def logger_factory(app, handler) :
     def logger(request) :
         logging.info('Request: %s %s' % (request.method, request.path))
         #yield from asyncio.sleep(0.3)
-        return (yield from handler(request))
+        r = yield from handler(request)
+        print('\r\n', r, id(r), type(r))
+        return r
     return logger
 
 @asyncio.coroutine
@@ -111,7 +113,12 @@ def auth_factory(app, handler) :
         if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin) :
             return web.HTTPFound('/signin')
         logging.info('authenticate finished!')
-        return (yield from handler(request))
+        r = yield from handler(request)
+        print()
+        logging.info(r)
+        print()
+        return r
+        #return web.Response(body = "ooo".encode('utf-8'))
     return auth
 
 @asyncio.coroutine
@@ -139,7 +146,8 @@ def response_factory(app, handler) :
         logging.info('Response handler... (%s)...' % request) #% (handler.__name__, str(dir((app)))))
         #logging.info(dir(handler.__call__), type(handler.__call__))
         r = yield from handler(request)
-        #logging.info(type(r), r)
+        logging.info(type(r))
+        #logging.info(r)
         if isinstance(r, web.StreamResponse) :
             return r
         if isinstance(r, bytes) :
@@ -208,7 +216,10 @@ ip = socket.gethostbyname(socket.gethostname())
 def init(loop) :
     yield from orm.create_pool(loop = loop, **configs.db)
     app = web.Application(loop = loop, debug = True, middlewares = [
-        logger_factory, response_factory, auth_factory
+        response_factory, logger_factory, auth_factory
+        #过滤时,依该list的顺序来过滤;不过影响不大
+        #在过滤方法中,调用yield from handler(request)相当于调用下一个过滤方法;若方法所有过滤已完成
+        #则调用call方法
     ])
     init_jinja2(app, filters = dict(datetime = datetime_filter))
     add_routes(app, 'handlers')

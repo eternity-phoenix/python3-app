@@ -57,7 +57,7 @@ def start_watch(path, callback) :
 
 if __name__ == '__main__' :
     argv = sys.argv[0 : : 1]
-    if not argv :
+    if len(argv) != 2 :
         print('Usage: ./pymonitor your-srcipt.py')
         exit(0)
     if argv[0] != 'python' :
