@@ -30,15 +30,17 @@ Web App里面有很多地方都要访问数据库。访问数据库需要创建�
 
 连接池由全局变量__pool存储，缺省情况下将编码设置为utf8，自动提交事务：
 '''
-import asyncio, logging, aiomysql
-logging.basicConfig(level = logging.DEBUG)
+import asyncio, aiomysql
+
+import loggingTools
+logger = loggingTools.getLogger('ormlogger')
 
 def log(sql, args = ()) :
-    logging.info('SQL: %s' % sql)
+    logger.info('SQL: %s' % sql)
 
 @asyncio.coroutine
 def create_pool(loop, **kw) :
-    logging.info('create database connection pool...')
+    logger.info('create database connection pool...')
     global __pool
     __pool = yield from aiomysql.create_pool(
     host = kw.get('host', 'localhost'),
@@ -69,9 +71,9 @@ def select(sql, args, size = None) :
             rs = yield from cur.fetchmany(size)
         else :
             rs = yield from cur.fetchall()
-        #logging.info((yield from cur.fetchall()))
+        #logger.info((yield from cur.fetchall()))
         yield from cur.close()
-        logging.info('rows returned: %s' % len(rs))
+        logger.info('rows returned: %s' % len(rs))
         return rs
 
 '''
@@ -96,7 +98,7 @@ def execute(sql, args, autocommit = True) :
             yield from conn.begin()
         try :
             cur = yield from conn.cursor()
-            logging.info(str(sql) +'.........' + str(args))
+            logger.info(str(sql) +'.........' + str(args))
             yield from cur.execute(sql.replace('?', '%s'), args)
             affected = cur.rowcount
             yield from cur.close()
@@ -196,14 +198,14 @@ class ModelMetaclass(type) :
             return type.__new__(cls, name, bases, attrs)
         #获取table名称
         tableName = attrs.get('__table__', None) or name
-        logging.info(' found model: %s (table: %s)' % (name, tableName))
+        logger.info('found model: %s (table: %s)' % (name, tableName))
         #获取所有field和主键名
         mappings = dict()
         fields = []
         primaryKey = None
         for k, v in attrs.items() :
             if isinstance(v, Field) :
-                logging.info(' found mapping: %s ==> %s' % (k, v))
+                logger.info(' found mapping: %s ==> %s' % (k, v))
                 mappings[k] = v
                 if v.primary_key :
                     #找到主键:
@@ -255,7 +257,7 @@ class Model(dict, metaclass = ModelMetaclass) :
             field = self.__mappings__[key]
             if field.default is not None :
                 value = field.default() if callable(field.default) else field.default
-                logging.debug('using default value for %s: %s' % (key, str(value)))
+                logger.debug('using default value for %s: %s' % (key, str(value)))
                 setattr(self, key, value)
         return value
 
@@ -307,9 +309,10 @@ class Model(dict, metaclass = ModelMetaclass) :
             sql.append('where')
             sql.append(where)
         rs = yield from select(' '.join(sql), args, 1)
-        logging.info(',,,,,, %s,,,,,0' % rs )
+        logger.info(',,,,,, %s,,,,,0' % rs )
         if len(rs) == 0 :
             return 0
+        #print(rs[0])
         return rs[0]['_num_']
 
     @classmethod
@@ -328,7 +331,7 @@ class Model(dict, metaclass = ModelMetaclass) :
         args.append(self.getValueOrDefault(self.__primary_key__))
         rows = yield from execute(self.__insert__, args)
         if rows != 1 :
-            logging.warn('failed to insert record: affected rows: %s' % rows)
+            logger.warn('failed to insert record: affected rows: %s' % rows)
 
     @asyncio.coroutine
     def update(self) :
@@ -336,14 +339,14 @@ class Model(dict, metaclass = ModelMetaclass) :
         args.append(self.getValue(self.__primary_key__))
         rows = yield from execute(self.__update__, args)
         if rows != 1 :
-            logging.warn('failed to insert record: affected rows: %s' % rows)
+            logger.warn('failed to insert record: affected rows: %s' % rows)
 
     @asyncio.coroutine
     def remove(self) :
         args = [self.getValue(self.__primary_key__)]
         rows = yield from execute(self.__delete__, args)
         if rows != 1 :
-            logging.warn('failed to remove by primary key: affected rows: %s' % rows)
+            logger.warn('failed to remove by primary key: affected rows: %s' % rows)
 
 
 
@@ -380,7 +383,7 @@ class Model(dict):
         args.append(self.getValueOrDefault(self.__primary_key__))
         rows = yield from execute(self.__insert__, args)
         if rows != 1:
-            logging.warn('failed to insert record: affected rows: %s' % rows)
+            logger.warn('failed to insert record: affected rows: %s' % rows)
 这样，就可以把一个User实例存入数据库：
 
 user = User(id=123, name='Michael')

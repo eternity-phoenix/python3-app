@@ -54,7 +54,11 @@ return {
 
 要把一个函数映射为一个URL处理函数，我们先定义@get()：
 '''
-import asyncio, os, inspect, logging, functools
+import asyncio, os, inspect, functools
+
+import loggingTools
+
+logger = loggingTools.getLogger('mylogger')
 
 from urllib import parse
 
@@ -163,7 +167,7 @@ class RequestHandler(object) :
 
     @asyncio.coroutine
     def __call__(self, request) :
-        logging.info('call beging...')
+        logger.info('call beging...')
         kw = None
         if self._has_var_kw_args or self._has_named_kw_args or self._has_request_arg :
             if request.method == 'POST' :
@@ -182,12 +186,12 @@ class RequestHandler(object) :
                     return web.HTTPBadRequest(body = ('Unsupported Content-Type: %s' % request.content_type).encode('utf-8'))
             if request.method == 'GET' :
                 qs = request.query_string
-                logging.info('qs : ' + qs)
+                logger.info('qs : ' + qs)
                 if qs :
                     kw = dict()
                     for k, v in parse.parse_qs(qs, True).items() :
                         kw[k] = v[0]
-        logging.info(str(kw) + 'line 189' + request.method + request.query_string)
+        logger.info(str(kw) + 'line 189' + request.method + request.query_string)
         if kw is None :
             kw = dict(**request.match_info)
         else :
@@ -198,13 +202,13 @@ class RequestHandler(object) :
                     if name in kw :
                         copy[name] = kw[name]
                 kw = copy
-            logging.info(str(kw) + 'line 200')
+            logger.info(str(kw) + 'line 200')
             #check named arg:
             for k, v in request.match_info.items() :
                 if k in kw :
-                    logging.warning('Duplicate arg name in named arg and kw args: %s' % k)
+                    logger.warning('Duplicate arg name in named arg and kw args: %s' % k)
                 kw[k] = v
-        logging.info(str(kw) + 'line 205 coro')
+        logger.info(str(kw) + 'line 205 coro')
         if self._has_request_arg :
             kw['request'] = request
         #check required kw:
@@ -212,13 +216,13 @@ class RequestHandler(object) :
             for name in self._required_kw_args :
                 if not name in kw :
                     return web.HTTPBadRequest(body = ('Missing argument: %s' % name).encode('utf-8'))
-        logging.info('call with args: %s' % str(kw))
+        logger.info('call with args: %s' % str(kw))
         try :
-            logging.info(kw)
+            logger.info(kw)
             r = yield from self._func(**kw)
             return r
         except APIError as e :
-            logging.warning('found a error! at line 219 of coroweb')
+            logger.warning('found a error! at line 219 of coroweb')
             return dict(error = e.error, data = e.data, message = e.message)
 '''
 再编写一个add_route函数，用来注册一个URL处理函数：
@@ -237,7 +241,7 @@ add_routes()定义如下：
 def add_static(app) :
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
     app.router.add_static('/static/', path)
-    logging.info('add static %s => %s!' % ('/static/', path))
+    logger.info('add static %s => %s!' % ('/static/', path))
 
 def add_route(app, fn) :
     method = getattr(fn, '__method__', None)
@@ -246,7 +250,7 @@ def add_route(app, fn) :
         raise ValueError('@get or @post not defined in %s.' % str(fn))
     if not asyncio.iscoroutinefunction(fn) and not inspect.isgeneratorfunction(fn) :
         fn = asyncio.coroutine(fn)
-    logging.info('add route %s %s => %s(%s)' % (method, path, fn.__name__, ', '.join(inspect.signature(fn).parameters.keys())))
+    logger.info('add route %s %s => %s(%s)' % (method, path, fn.__name__, ', '.join(inspect.signature(fn).parameters.keys())))
     #支持@post(['/', '/index'])区分大小写,不支持中文
     if isinstance(path, (list, tuple)) :
         for path_ in path :

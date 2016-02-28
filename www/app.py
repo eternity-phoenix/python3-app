@@ -13,7 +13,10 @@ import sys
 sys.path.append('/home/eternity-phoenix/.local/lib/python3.5/site-packages')
 #由于server的模块安装位置不当,请无视
 
-import logging; logging.basicConfig(level = logging.INFO)
+import loggingTools
+
+logger = loggingTools.getLogger('mylogger')
+
 
 import asyncio, os, json, time, socket
 from datetime import datetime
@@ -39,7 +42,7 @@ def logger_factory(app, handler):
     @asyncio.coroutine
     def logger(request):
         # 记录日志:
-        logging.info('Request: %s %s' % (request.method, request.path))
+        logger.info('Request: %s %s' % (request.method, request.path))
         # 继续处理请求:
         return (yield from handler(request))
     return logger
@@ -66,7 +69,7 @@ def response_factory(app, handler):
 有了这些基础设施，我们就可以专注地往handlers模块不断添加URL处理函数了，可以极大地提高开发效率。
 '''
 def init_jinja2(app, **kw) :
-    logging.info('init jinja2...')
+    logger.info('init jinja2...')
     options = dict(
         autoescape = kw.get('autoescape', True),
         block_start_string = kw.get('block_start_string', '{%'),
@@ -78,44 +81,44 @@ def init_jinja2(app, **kw) :
     path = kw.get('path', None)
     if path is None :
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
-    logging.info('set jinja2 template path: %s' % path)
+    logger.info('set jinja2 template path: %s' % path)
     env = Environment(loader = FileSystemLoader(path), **options)
     filters = kw.get('filters', None)
     if filters is not None :
         for name, f in filters.items() :
             env.filters[name] = f
     app['__templating__'] = env
-    logging.info('init_jinja2 complete!')
+    logger.info('init_jinja2 complete!')
 
 @asyncio.coroutine
 def logger_factory(app, handler) :
     @asyncio.coroutine
-    def logger(request) :
-        logging.info('Request: %s %s' % (request.method, request.path))
+    def loggers(request) :
+        logger.info('Request: %s %s' % (request.method, request.path))
         #yield from asyncio.sleep(0.3)
         r = yield from handler(request)
-        print('\r\n', r, id(r), type(r))
+        #print('\r\n', r, id(r), type(r))
         return r
-    return logger
+    return loggers
 
 @asyncio.coroutine
 def auth_factory(app, handler) :
     @asyncio.coroutine
     def auth(request) :
-        logging.info('check user : %s %s' % (request.method, request.path))
+        logger.info('check user : %s %s' % (request.method, request.path))
         request.__user__ = None
         cookie_str = request.cookies.get(COOKIE_NAME)
         if cookie_str :
             user = yield from cookie2user(cookie_str)
             if user :
-                logging.info('set current user: %s' % user.email)
+                logger.info('set current user: %s' % user.email)
                 request.__user__ = user
         if request.path.startswith('/manage/') and (request.__user__ is None or not request.__user__.admin) :
             return web.HTTPFound('/signin')
-        logging.info('authenticate finished!')
+        logger.info('authenticate finished!')
         r = yield from handler(request)
         print()
-        logging.info(r)
+        logger.info(r)
         print()
         return r
         #return web.Response(body = "ooo".encode('utf-8'))
@@ -128,14 +131,14 @@ def data_factory(app, handler) :
         '''
         移动APP预留接口
         '''
-        logging.info('parse_data in line 98')
+        logger.info('parse_data in line 98')
         if request.method == 'POST' :
             if request.content_type.lower().startswith('application/json') :
                 request.__data__ = yield from request.json()
-                logging.info('request json: %s' % str(request.__data__))
+                logger.info('request json: %s' % str(request.__data__))
             elif request.content_type.lower().startswith('application/x-www-form-urlencoded') :
                 request.__data__ = yield from request.post()
-                logging.info('request from : %s' % str(request.__data__))
+                logger.info('request from : %s' % str(request.__data__))
         return (yield from handler(request))
     return parse_data
 
@@ -143,11 +146,11 @@ def data_factory(app, handler) :
 def response_factory(app, handler) :
     @asyncio.coroutine
     def response(request) :
-        logging.info('Response handler... (%s)...' % request) #% (handler.__name__, str(dir((app)))))
-        #logging.info(dir(handler.__call__), type(handler.__call__))
+        logger.info('Response handler... (%s)...' % request) #% (handler.__name__, str(dir((app)))))
+        #logger.info(dir(handler.__call__), type(handler.__call__))
         r = yield from handler(request)
-        logging.info(type(r))
-        #logging.info(r)
+        logger.info(type(r))
+        #logger.info(r)
         if isinstance(r, web.StreamResponse) :
             return r
         if isinstance(r, bytes) :
@@ -161,12 +164,12 @@ def response_factory(app, handler) :
             resp.content_type = 'text/html;charset=utf-8'
             return resp
         if isinstance(r, dict) :
-            logging.info(r)
+            logger.info(r)
             template = r.get('__template__', None)
             if template is None :
                 resp = web.Response(body = json.dumps(r, ensure_ascii = False, default = lambda o : o.__dict__).encode('utf-8'))
                 resp.content_type = 'application/json;charset=utf-8'
-                logging.info('return dict ....')
+                logger.info('return dict ....')
                 return resp
             else :
                 try :
@@ -225,7 +228,7 @@ def init(loop) :
     add_routes(app, 'handlers')
     add_static(app)
 
-    logging.info('init complete!')
+    logger.info('init complete!')
 
     #print(ip)
     r = input('run at local(1) or temp test at web(2)?')
@@ -236,7 +239,7 @@ def init(loop) :
         port = 80
         _ip = ip
     srv = yield from loop.create_server(app.make_handler(), _ip, port)
-    logging.info('server started at http://%s:80...' % ip)
+    logger.info('server started at http://%s:%s...' % (_ip, port))
     return srv
 
 if __name__ == '__main__' :

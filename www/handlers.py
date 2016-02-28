@@ -18,7 +18,10 @@ def index(request):
     }
 '__template__'指定的模板文件是test.html，其他参数是传递给模板的数据，所以我们在模板的根目录templates下创建test.html：
 '''
-import re, time, json, logging, hashlib, base64, asyncio
+import re, time, json, hashlib, base64, asyncio
+
+import loggingTools
+logger = loggingTools.getLogger('mylogger')
 
 from coroweb import get, post
 from models import User, Comment, Blog, next_id
@@ -80,12 +83,12 @@ def cookie2user(cookie_str) :
             return None
         s = '%s-%s-%s-%s' % (uid, user.passwd, expires, _COOKIE_KEY)
         if sha1 != hashlib.sha1(s.encode('utf-8')).hexdigest() :
-            logging.info('///***invalid sha1***///')
+            logger.info('///***invalid sha1***///')
             return None
         user.passwd = '********'
         return user
     except Exception as e :
-        logging.exception(e)
+        logger.exception(e)
         return None
 
 @get(['/', '/index', '/home'])
@@ -140,7 +143,7 @@ def test(request) :
 
 @get('/api/test/users')
 def api_get_users(request) :
-    logging.info('URL return in 56 %s' % request)
+    logger.info('URL return in 56 %s' % request)
     users = yield from User.findAll(orderBy = 'created_at desc')
     for u in users :
         u.passwd = '********'
@@ -163,7 +166,7 @@ def signout(request) :
     referer = request.headers.get('Referer')
     r = web.HTTPFound(referer or '/')
     r.set_cookie(COOKIE_NAME, '-deleted-', max_age = 0, httponly = True)
-    logging.info('user signed out')
+    logger.info('user signed out')
     return r
 
 @post('/api/authenticate')
@@ -188,7 +191,7 @@ def authenticate(*, email, passwd, remember) :
         raise APIValueError('password', 'Invalid password')
     #authenticate ok, set cookie
     r = web.Response()
-    logging.info(remember)
+    logger.info(remember)
     max_age = 86400 if remember == 'false' else 3600
     r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age = max_age, httponly = True)
     user.passwd = '********'
@@ -198,7 +201,7 @@ def authenticate(*, email, passwd, remember) :
 
 @post('/api/test/users')
 def api_post_users(request) :
-    logging.info('URL return in 56 %s' % request)
+    logger.info('URL return in 56 %s' % request)
     users = yield from User.findAll(orderBy = 'created_at desc')
     for u in users :
         u.passwd = '********'
@@ -319,7 +322,7 @@ def manage_blogs(request, *, page = 1) :
 @post('/api/blogs')
 def api_create_blog(request, *, name, summary, content) :
     check_admin(request)
-    logging.info('create blog')
+    logger.info('create blog')
     if not str(name).strip() :
         raise APIValueError('name', 'name cannot be empty.')
     if not str(summary).strip() :

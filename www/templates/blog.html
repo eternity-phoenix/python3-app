@@ -75,6 +75,10 @@ $(function () {
                     </header>
                     <div class="uk-comment-body">
                         {{ comment.html_content|safe }}
+<!--Flask 的模板 Jinja2 会将所有的 html 转义，我想让输出的 <img>、<code>
+等指定的标签不进行转义，让他们正常输出，有何良策？
+
+可以试试 safe 这个filter,原始的 string 就不会被 escape-->
                     </div>
                 </article>
             </li>

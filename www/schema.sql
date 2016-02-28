@@ -20,7 +20,8 @@ create table users (
     key `idx_created_at` (`created_at`),
     primary key (`id`)
 ) engine=innodb default charset=utf8;
-
+--key `idx_created_at` (`created_at`),
+--本表的created_at建立一个名为idx_created_at的索引
 create table blogs (
     `id` varchar(50) not null,
     `user_id` varchar(50) not null,
