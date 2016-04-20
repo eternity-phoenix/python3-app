@@ -48,9 +48,9 @@ awesome-python3-webapp/  <-- 根目录
 +- LICENSE               <-- 代码LICENSE
 创建好项目的目录结构后，建议同时建立git仓库并同步至GitHub，保证代码修改的安全。
 
-要了解git和GitHub的用法，请移步Git教程。
+
 
 开发工具
 
-自备，推荐用Sublime Text，请参考使用文本编辑器。
+自备，推荐用Atom，请参考使用文本编辑器。
 '''
